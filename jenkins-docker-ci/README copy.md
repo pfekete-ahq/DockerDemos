@@ -1,26 +1,34 @@
+# intro
+
+Docker compose group as a starting point, we created a dotnet point. For use as a starting point or practice. Written for people in automation practice.
+
 # jenkins-docker-ci
 
-A CI stack in Docker which runs:
+We started with a CI stack in Docker which runs:
 
 1. Jenkins
-2. Selenium Grid
-3. Chrome
-4. Firefox
+2. Selenium grid - selenium/hub:3.141.59-palladium
+3. Chrome node - selenium/node-chrome:3.141.59-palladium
+4. Firefox node - selenium/node-firefox:3.141.59-palladium
 
 ## Jenkins
 
 The jenkins url is http://localhost:7000
 The login details are user: `admin` and password: `admin`
 
+Jenkins is run on a docker image that uses Ubuntu.
+
 ## C# Project
 
 I used my own project to run this against: https://github.com/pfekete-ahq/code-camp-march-2022
 
+We found that jenkins by itself was not able to run the .NET tests we were using. We were using MSTest for unit testing and using .NET 5.0.
+
 ## Dockerfile
 
-Included in the dockerfile are commands to install dotnet-sdk-5.0
+Several packages needed to be installed inside the docker container in order to use Microsoft software products for Linux systems. Using apt we install wget and then use that to install packages-microsoft-prod.deb which is required to run .NET on Linux.
 
-We chose this because it matches the version of dotnet used in the project we are building.
+Included in the dockerfile are commands to install dotnet-sdk-5.0. This package is installed because it needs to match the version used in the Visual Studio project. If they do not match the tests will not run.
 
 ## Run the docker setup
 
@@ -29,7 +37,7 @@ docker-compose build && docker-compose up
 NOTE: sometimes the volumes get into a state where it cannot be restarted due to an inability to write to the docker volume. In this case run: (need to be in root directory of this project)
 docker-compose down --volumes 
 
-When docker is up and running you should be able to open the following:
+When docker is up and running you should be able to open the following in the browser of the host machine (ie the computer you are running the docker containers on):
 localhost:7000 <-- this will open jenkins
 localhost:4444/grid/console <-- this will open the Selenium Hub grid console
 
@@ -67,3 +75,19 @@ Once the credentials are set up, add a build step.
 2. In the command text box enter 'dotnet test'
 
 In the page for the pipeline, click on 'Build Now' in the left hand menu. The a new pipeline run will appear in the 'Build history'. If you click on the build number this should open a console view where you can see the output of the pipeline.
+
+
+# Change to the code
+
+One problem we found is accessing the selenium-hub from within the docker container. When trying to connect to selenium-hub using localhost:4444 we encounter an error saying the connection has been refused. In order to deal with this we included the following code to instantiate the web driver:
+
+if (OperatingSystem.IsWindows())
+{
+    driver = new RemoteWebDriver(remoteAddress: new Uri("http://localhost:4444/wd/hub"), options);
+}
+else if (OperatingSystem.IsOSPlatform("Linux"))
+{
+    driver = new RemoteWebDriver(remoteAddress: new Uri("http://selenium-hub:4444/wd/hub"), options);
+}
+
+We found that docker will handle selenium-hub::4444 and connect to the selenium-hub container, but our local machine requires localhost:4444. We declare them based on whether the machine is running Windows or if it's running Linux. The assumption is developers are using Windows and docker will be running Linux. This is not an ideal solution. The intention moving forwards is to have the network connection setup in the docker-compose.yml file.
