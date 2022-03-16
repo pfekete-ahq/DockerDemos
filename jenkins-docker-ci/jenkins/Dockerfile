@@ -1,26 +1,26 @@
-FROM jenkins/jenkins:lts-alpine
-
-LABEL maintainer "dan.humphrey@accesshq.com"
+FROM jenkins/jenkins:lts
 
 ENV JAVA_OPTS -Djenkins.install.runSetupWizard=false
 
 USER root
 
-# install wget
-RUN apk update
-RUN apk add ca-certificates wget   
+# Install needed tools and upgrade installed packages
+RUN apt-get update
+RUN apt-get install wget
+RUN wget https://packages.microsoft.com/config/ubuntu/18.04/packages-microsoft-prod.deb -O packages-microsoft-prod.deb
+RUN dpkg -i packages-microsoft-prod.deb
+RUN rm packages-microsoft-prod.deb
 
-# get maven 3.6.0
-RUN wget --no-verbose -O /tmp/apache-maven-3.6.0-bin.tar.gz http://apache.cs.utah.edu/maven/maven-3/3.6.3/binaries/apache-maven-3.6.3-bin.tar.gz
+# install certificates
+RUN apt-get update
+RUN apt-get install ca-certificates
 
-# install maven
-RUN tar xzf /tmp/apache-maven-3.6.0-bin.tar.gz -C /opt/
-RUN ln -s /opt/apache-maven-3.6.0 /opt/maven
-RUN ln -s /opt/maven/bin/mvn /usr/local/bin
-RUN rm -f /tmp/apache-maven-3.6.0-bin.tar.gz
-ENV MAVEN_HOME /opt/maven
-
-RUN chown -R jenkins:jenkins /opt/maven
+# Install .NET SDK 5.0
+RUN apt-get update
+RUN apt-get install -y apt-transport-https
+RUN apt-get update
+RUN apt-get install -y dotnet-sdk-5.0
+RUN dotnet --version
 
 # jenkins user
 RUN echo "jenkins ALL=NOPASSWD: ALL" >> /etc/sudoers
@@ -40,5 +40,3 @@ RUN /usr/local/bin/install-plugins.sh < /usr/share/jenkins/ref/plugins.txt
 # prevent banner prompt for pipeline plugins
 RUN echo 2.164.2 > /usr/share/jenkins/ref/jenkins.install.UpgradeWizard.state
 RUN echo 2.164.2 > /usr/share/jenkins/ref/jenkins.install.InstallUtil.lastExecVersion
-# maven installations
-COPY ./hudson.tasks.Maven.xml /usr/share/jenkins/ref/hudson.tasks.Maven.xml
