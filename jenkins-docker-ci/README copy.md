@@ -95,3 +95,11 @@ else if (OperatingSystem.IsOSPlatform("Linux"))
 }
 
 We found that docker will handle selenium-hub::4444 and connect to the selenium-hub container, but our local machine requires localhost:4444. We declare them based on whether the machine is running Windows or if it's running Linux. The assumption is developers are using Windows and docker will be running Linux. This is not an ideal solution. The intention moving forwards is to have the network connection setup in the docker-compose.yml file.
+
+
+
+# Troubleshooting
+
+docker.errors.InvalidArgument: "host" network_mode is incompatible with port_bindings
+
+This occurred when executing 'docker-compose up' on the command line. 
