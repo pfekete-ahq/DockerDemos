@@ -1,6 +1,10 @@
 # intro
 
-Docker compose group as a starting point, we created a dotnet point. For use as a starting point or practice. Written for people in automation practice.
+We started with a docker compose group for running jenkins to use selenium grid for running automation tests. We wanted to modify this in order to use .NET. Out of the box, the docker group is unable to run .NET unit tests using MSTest.
+
+We modified the docker compose YAML and the dockerfile to add the required .NET to the jenkins container. The intention is that these instructions should be a working starting point for anybody to get the docker deployment up and running, and to be able to practice with. 
+
+Written for people in automation practice.
 
 # jenkins-docker-ci
 
